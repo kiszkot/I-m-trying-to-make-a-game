@@ -1,6 +1,6 @@
 #include <iostream>
 #include "src/Game.hpp"
-using namespace std;
+//using namespace std;
 
 Game * game = nullptr;
 

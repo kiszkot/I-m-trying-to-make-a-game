@@ -18,7 +18,7 @@ private:
 
     SDL_Texture * sheet;
 
-    int map[20][21];
+    int map[20][25];
 
 };
 

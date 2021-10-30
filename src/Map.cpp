@@ -38,6 +38,10 @@ Map::Map() {
     dest.w = 32;
 }
 
+Map::~Map() {
+    SDL_DestroyTexture(sheet);
+}
+
 void Map::LoadMap(int arr[20][25]) {
     for(int row = 0; row < 20; row++) {
         for(int col = 0; col < 25; col++) {

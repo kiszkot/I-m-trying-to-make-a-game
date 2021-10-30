@@ -1,12 +1,27 @@
 #include "Game.hpp"
 #include "TextureManager.hpp"
-#include "GameObject.hpp"
+//#include "GameObject.hpp"
 #include "Map.hpp"
+//#include "ECS/ECS.hpp"
+#include "ECS/Components.hpp"
+#include "Vector2D.hpp"
+#include "Collision.hpp"
 
-GameObject * player;
+//GameObject * player;
 Map * map;
 
 SDL_Renderer * Game::renderer = nullptr;
+
+Manager manager;
+SDL_Event Game::event;
+
+std::vector<ColliderComponent *> Game::colliders;
+
+auto & tile0(manager.addEntity());
+auto & tile1(manager.addEntity());
+
+auto & player(manager.addEntity());
+auto & wall(manager.addEntity());
 
 Game::Game() {}
 
@@ -39,8 +54,25 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
         isRunning = false;
     }
 
-    player = new GameObject("assets/spriteTable.png", 0, 0);
+    //player = new GameObject("assets/spriteTable.png", 0, 0);
     map = new Map();
+
+    // ECS Implement
+    //newPlayer.addComponent<PositionComponent>();
+    //newPlayer.getComponent<PositionComponent>().init();
+
+    tile0.addComponent<TileComponent>(200, 200, 32, 32, 0);
+    tile1.addComponent<TileComponent>(250, 250, 32, 32, 1);
+    tile1.addComponent<ColliderComponent>("Grass");
+
+    player.addComponent<TransformComponent>(2);
+    player.addComponent<SpriteComponent>("assets/spriteTable.png", true, 5);
+    player.addComponent<KeyboardController>();
+    player.addComponent<ColliderComponent>("player");
+
+    wall.addComponent<TransformComponent>(300.0, 300.0, 300, 20, 1);
+    wall.addComponent<SpriteComponent>("assets/tileMap.png", 1, 0);
+    wall.addComponent<ColliderComponent>("wall");
 
 }
 
@@ -49,7 +81,6 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
  * **/
 
 void Game::handleEvents() {
-    SDL_Event event;
     SDL_PollEvent(&event);
     switch(event.type) {
         case SDL_QUIT:
@@ -67,8 +98,24 @@ void Game::handleEvents() {
 
 void Game::update() {
 
-    player -> Update();
+    Vector2D playerPos = player.getComponent<TransformComponent>().position;
+    manager.refresh();
+    manager.update();
 
+    for(auto & cc : colliders) {
+        if(Collision::AABB(player.getComponent<ColliderComponent>(), * cc) &&
+            player.getComponent<ColliderComponent>() != * cc) {
+        
+            //player.getComponent<TransformComponent>().velocity * -2;
+            player.getComponent<TransformComponent>().position = playerPos;
+        }
+    }
+
+    /*
+    * std::cout << newPlayer.getComponent<PositionComponent>().x() << " , " <<
+    *     newPlayer.getComponent<PositionComponent>().y() << std::endl;
+    * */
+   
 }
 
 /**
@@ -81,8 +128,8 @@ void Game::render() {
     // Add your render crap here
     // Background first, stuff on top last
 
-    //map -> DrawMap();
-    player -> Render();
+    // map -> DrawMap();
+    manager.draw();
 
     SDL_RenderPresent(renderer);
 }
