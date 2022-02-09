@@ -39,6 +39,9 @@ public:
                 xpos = 1;
                 ypos = 0;
                 break;
+            case 2:
+                xpos = 2;
+                ypos = 0;
             default:
                 break;
         }

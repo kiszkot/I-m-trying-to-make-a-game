@@ -17,11 +17,17 @@ SDL_Event Game::event;
 
 std::vector<ColliderComponent *> Game::colliders;
 
-auto & tile0(manager.addEntity());
-auto & tile1(manager.addEntity());
+// auto & tile0(manager.addEntity());
+// auto & tile1(manager.addEntity());
 
 auto & player(manager.addEntity());
 auto & wall(manager.addEntity());
+
+enum groupLabels : std::size_t {
+    groupMap,
+    groupPlayers,
+    groupColliders
+};
 
 Game::Game() {}
 
@@ -61,18 +67,24 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
     //newPlayer.addComponent<PositionComponent>();
     //newPlayer.getComponent<PositionComponent>().init();
 
+    /*
     tile0.addComponent<TileComponent>(200, 200, 32, 32, 0);
     tile1.addComponent<TileComponent>(250, 250, 32, 32, 1);
     tile1.addComponent<ColliderComponent>("Grass");
+    */
+
+    Map::LoadMap("assets/map1.map", 16, 16);
 
     player.addComponent<TransformComponent>(2);
-    player.addComponent<SpriteComponent>("assets/spriteTable.png", true, 5);
+    player.addComponent<SpriteComponent>("assets/spriteTable.png", true);
     player.addComponent<KeyboardController>();
     player.addComponent<ColliderComponent>("player");
+    player.addGroup(groupPlayers);
 
     wall.addComponent<TransformComponent>(300.0, 300.0, 300, 20, 1);
     wall.addComponent<SpriteComponent>("assets/tileMap.png", 1, 0);
     wall.addComponent<ColliderComponent>("wall");
+    wall.addGroup(groupMap);
 
 }
 
@@ -118,6 +130,9 @@ void Game::update() {
    
 }
 
+auto & tiles(manager.GetGroup(groupMap));
+auto & players(manager.GetGroup(groupPlayers));
+
 /**
  * Renders sprites on screen from back to front
  * **/
@@ -128,8 +143,8 @@ void Game::render() {
     // Add your render crap here
     // Background first, stuff on top last
 
-    // map -> DrawMap();
-    manager.draw();
+    for(auto & t : tiles) { t -> draw(); }
+    for(auto & t : players) { t -> draw(); }
 
     SDL_RenderPresent(renderer);
 }
@@ -143,4 +158,10 @@ void Game::clean() {
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
     std::cout << "Game Cleaned" << std::endl;
+}
+
+void Game::AddTile(int id, int x, int y) {
+    auto & tile(manager.addEntity());
+    tile.addComponent<TileComponent>(x, y, 32, 32, id);
+    tile.addGroup(groupMap);
 }

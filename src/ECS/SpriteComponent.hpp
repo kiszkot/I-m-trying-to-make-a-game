@@ -3,11 +3,19 @@
 #include "Components.hpp"
 #include "TransformComponent.hpp"
 #include "../TextureManager.hpp"
+#include "Animation.hpp"
 #include <SDL2/SDL.h>
+#include <map>
 
 class SpriteComponent : public Component {
 
 public:
+
+    int y = 0; // animIndex
+
+    std::map<const char *, Animation> animations;
+
+    SDL_RendererFlip spriteFlip = SDL_FLIP_NONE;
 
     SpriteComponent() = default;
 
@@ -16,11 +24,21 @@ public:
         setTexture(path);
     }
 
-    // Animated texture
-    SpriteComponent(const char * path, bool anim, int numberOfFrames) {
+    /**
+     * For animated textures a separate texture file is needed
+     * The texture can be static and will stay on first frame of the aimation if @animate is set to false
+     * */
+    SpriteComponent(const char * path, bool animate) {
+        isAnimated = animate;
+
+        Animation idle = Animation(0, 5, 100);
+        // Animation walk = Animation(1, 5, 100);
+
+        animations.emplace("Idle", idle);
+        // animations.emplace("Walk", walk);
+
+        Play("Idle");
         setTexture(path);
-        if(anim) numberAnimFrames = numberOfFrames * 32;
-        isAnimated = anim;
     }
 
     /*
@@ -45,37 +63,38 @@ public:
     void init() override {
         transform = &entity -> getComponent<TransformComponent>();
 
-        srcRect.x = x * 32;
-        srcRect.y = y * 32;
-        srcRect.h = 32;
-        srcRect.w = 32;
+        srcRect.x = x * transform -> width;
+        srcRect.y = y * transform -> height;
+        srcRect.h = transform -> height;
+        srcRect.w = transform -> width;
     }
 
     void update() override {
 
-        destRect.h = transform -> height * transform -> scale;
-        destRect.w = transform -> width * transform -> scale;
-
         if(isAnimated) {
-            srcRect.x = currentAnimFrame;
-            animate();
+            srcRect.x = srcRect.w * int ((SDL_GetTicks() / speed) % frames);
         }
 
+        srcRect.y = y * transform -> height;
+
+        destRect.h = transform -> height * transform -> scale;
+        destRect.w = transform -> width * transform -> scale;
         destRect.x = int (transform -> position.x);
         destRect.y = int (transform -> position.y);
     }
 
     void draw() override {
-        TextureManager::Draw(texture, srcRect, destRect);
-    }
-
-    void animate() {
-        currentAnimFrame += 32;
-        if(currentAnimFrame > numberAnimFrames) currentAnimFrame = 0;
+        TextureManager::Draw(texture, srcRect, destRect, spriteFlip);
     }
 
     void debug() {
         printf("%d , %d - for sprite\n", srcRect.x, srcRect.y);
+    }
+
+    void Play(const char * animName) {
+        frames = static_cast<Uint32>(animations[animName].frames);
+        y = animations[animName].index;
+        speed = static_cast<Uint32>(animations[animName].speed);
     }
 
 
@@ -86,11 +105,10 @@ private:
 
     SDL_Rect srcRect, destRect;
     
-    int numberAnimFrames = 0; // number of animation frames
-    int currentAnimFrame = 0;
+    Uint32 frames = 0; // number of animation frames
+    Uint32 speed = 100; // Delay between frames
     bool isAnimated = false;
 
-    int x = 0;
-    int y = 0;    
+    int x = 0;   
 
 };
