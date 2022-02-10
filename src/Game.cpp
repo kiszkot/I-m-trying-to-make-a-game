@@ -1,13 +1,10 @@
 #include "Game.hpp"
 #include "TextureManager.hpp"
-//#include "GameObject.hpp"
 #include "Map.hpp"
-//#include "ECS/ECS.hpp"
 #include "ECS/Components.hpp"
 #include "Vector2D.hpp"
 #include "Collision.hpp"
 
-//GameObject * player;
 Map * map;
 
 SDL_Renderer * Game::renderer = nullptr;
@@ -16,9 +13,6 @@ Manager manager;
 SDL_Event Game::event;
 
 std::vector<ColliderComponent *> Game::colliders;
-
-// auto & tile0(manager.addEntity());
-// auto & tile1(manager.addEntity());
 
 auto & player(manager.addEntity());
 auto & wall(manager.addEntity());
@@ -60,32 +54,17 @@ void Game::init(const char* title, int xpos, int ypos, int width, int height, bo
         isRunning = false;
     }
 
-    //player = new GameObject("assets/spriteTable.png", 0, 0);
     map = new Map();
 
     // ECS Implement
-    //newPlayer.addComponent<PositionComponent>();
-    //newPlayer.getComponent<PositionComponent>().init();
 
-    /*
-    tile0.addComponent<TileComponent>(200, 200, 32, 32, 0);
-    tile1.addComponent<TileComponent>(250, 250, 32, 32, 1);
-    tile1.addComponent<ColliderComponent>("Grass");
-    */
-
-    Map::LoadMap("assets/map1.map", 16, 16);
+    Map::LoadMap("assets/map2.map", 16, 16);
 
     player.addComponent<TransformComponent>(2);
     player.addComponent<SpriteComponent>("assets/spriteTable.png", true);
     player.addComponent<KeyboardController>();
     player.addComponent<ColliderComponent>("player");
     player.addGroup(groupPlayers);
-
-    wall.addComponent<TransformComponent>(300.0, 300.0, 300, 20, 1);
-    wall.addComponent<SpriteComponent>("assets/tileMap.png", 1, 0);
-    wall.addComponent<ColliderComponent>("wall");
-    wall.addGroup(groupMap);
-
 }
 
 /**
@@ -110,7 +89,7 @@ void Game::handleEvents() {
 
 void Game::update() {
 
-    Vector2D playerPos = player.getComponent<TransformComponent>().position;
+    Vector2D playerPos = player.getComponent<TransformComponent>().previousPos;
     manager.refresh();
     manager.update();
 
@@ -120,6 +99,7 @@ void Game::update() {
         
             //player.getComponent<TransformComponent>().velocity * -2;
             player.getComponent<TransformComponent>().position = playerPos;
+            player.getComponent<TransformComponent>().target = playerPos;
         }
     }
 
@@ -132,6 +112,8 @@ void Game::update() {
 
 auto & tiles(manager.GetGroup(groupMap));
 auto & players(manager.GetGroup(groupPlayers));
+
+const char * mapFile = "assets/tileMap.png";
 
 /**
  * Renders sprites on screen from back to front
@@ -160,8 +142,8 @@ void Game::clean() {
     std::cout << "Game Cleaned" << std::endl;
 }
 
-void Game::AddTile(int id, int x, int y) {
+void Game::AddTile(int srcX, int srcY, int xpos, int ypos) {
     auto & tile(manager.addEntity());
-    tile.addComponent<TileComponent>(x, y, 32, 32, id);
+    tile.addComponent<TileComponent>(srcX, srcY, xpos, ypos, mapFile);
     tile.addGroup(groupMap);
 }

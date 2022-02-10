@@ -17,27 +17,46 @@ public:
     }
 
     void update() override {
+        const Uint8 * keystates = SDL_GetKeyboardState(NULL);
+        if(keystates[SDL_SCANCODE_W]) {
+            transform -> selectTargetPosition(0);
+        } else if(keystates[SDL_SCANCODE_A]) {
+            transform -> selectTargetPosition(3);
+        } else if(keystates[SDL_SCANCODE_S]) {
+            transform -> selectTargetPosition(2);
+        } else if(keystates[SDL_SCANCODE_D]) {
+            transform -> selectTargetPosition(1);
+        } else if(keystates[SDL_SCANCODE_ESCAPE]) {
+            user_quit.type = SDL_QUIT;
+            SDL_PushEvent(&user_quit);
+        }
+/*
         if(Game::event.type == SDL_KEYDOWN) {
             switch(Game::event.key.keysym.sym) {
                 case SDLK_w:
+                    transform -> selectTargetPosition(0);
                     transform -> velocity.y = -1;
                     // sprite -> Play("Walk")
                     break;
                 case SDLK_a:
+                    transform -> selectTargetPosition(3);
                     transform -> velocity.x = -1;
                     // sprite -> Play("Walk")
                     sprite -> spriteFlip = SDL_FLIP_HORIZONTAL;
                     break;
                 case SDLK_s:
+                    transform -> selectTargetPosition(2);
                     transform -> velocity.y = 1;
                     // sprite -> Play("Walk")
                     break;
                 case SDLK_d:
+                    transform -> selectTargetPosition(1);
                     transform -> velocity.x = 1;
                     // sprite -> Play("Walk")
                     break;
                 case SDLK_ESCAPE:
-                    SDL_QuitEvent();
+                    user_quit.type = SDL_QUIT;
+                    SDL_PushEvent(&user_quit);
                     break;
                 default:
                     break;
@@ -66,7 +85,10 @@ public:
                 default:
                     break;
             }
-        }
+        } */
     }
+
+private:
+    SDL_Event user_quit;
 
 };
